@@ -1,0 +1,15 @@
+# jetbrains .idea folder
+*.idea
+# c-sharp binary file output folder
+*bin/
+# c-sharp debug release binary file output folder
+*Debug/
+# these idk something to do with c-sharp
+*obj/
+*.config/
+#*.DotSettings.user
+
+
+
+### single file excludes ###
+osu.ppy.sh_cookies.txt
