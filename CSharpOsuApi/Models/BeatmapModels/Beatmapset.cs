@@ -57,6 +57,7 @@ public class Beatmapset : BeatmapsetGeneratorModel
     [JsonPropertyName("beatmaps")]
     public Beatmap[]? Beatmaps { get; init; }
     
+    [JsonIgnore]
     public List<RulesetEnum> AllGameModes { get {
         if (Beatmaps == null) return [];
         List<RulesetEnum> gameModes = [];

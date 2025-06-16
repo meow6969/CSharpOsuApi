@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace CSharpOsuApi.Models.BeatmapModels.Metadata;
 
-public class BeatmapFailtimes
+public class BeatmapFailtimes : OsuClass
 {
     [JsonPropertyName("exit")]
     public int[]? Exit { get; init; }

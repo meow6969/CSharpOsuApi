@@ -3,8 +3,10 @@ using System.Text;
 using System.Text.Json;
 using CSharpOsuApi.Models;
 using CSharpOsuApi.Models.BeatmapModels;
+using CSharpOsuApi.Models.BeatmapModels.Metadata;
 using CSharpOsuApi.Models.Http;
 using CSharpOsuApi.Models.Http.Query;
+using CSharpOsuApi.Models.OsuEnums;
 using CSharpOsuApi.Models.UserModels;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -32,7 +34,7 @@ public class OsuBackend
         SharedClient = SetupSharedClient();
     }
 
-    public bool DownloadBeatmapset(BeatmapsetExtended beatmapset, params string[] saveDirectories)
+    public bool DownloadBeatmapset(Beatmapset beatmapset, params string[] saveDirectories)
     {
         if (OsuSessionCookie == null) throw new Exception("cannot download beatmapset without osuSessionCookie");
         
@@ -86,11 +88,21 @@ public class OsuBackend
         foreach (string saveDirectory in saveDirectories)
         {
             string savePath = Path.Combine(saveDirectory, fileName);
+            if (File.Exists(savePath))
+            {
+                Console.WriteLine($"beatmap {savePath} already exists, skipping");
+                continue;
+            }
             saveDirectoriesString += savePath + ", ";
             File.WriteAllBytes(savePath, beatmapsetBytes);
         }
         Console.WriteLine($"{fileName} saved in these directories: {saveDirectoriesString}");
         return true;
+    }
+
+    public bool DownloadBeatmapset(BeatmapsetExtended beatmapset, params string[] saveDirectories)
+    {
+        return DownloadBeatmapset((Beatmapset)beatmapset, saveDirectories);
     }
 
     public BeatmapExtended GetBeatmap(int beatmapId)
@@ -121,12 +133,51 @@ public class OsuBackend
         
         return SendOsuApiRequest<BeatmapsetsSearchResponse>(HttpMethod.Get, "/beatmapsets/search");
     }
+    
+    public BeatmapPlaycount[] GetUserMostPlayedBeatmaps(User user, int limit=5, int offset=0)
+    {
+        return SendOsuApiRequest<BeatmapPlaycount[]>(
+            HttpMethod.Get, 
+            $"/users/{user.Id}/beatmapsets/most_played?limit={limit}&offset={offset}"
+        );
+    }
+
+    private BeatmapsetExtended[] GetUserBeatmaps(User user, BeatmapType type, int limit=5, int offset=0)
+    {
+        return SendOsuApiRequest<BeatmapsetExtended[]>(
+            HttpMethod.Get, 
+            $"/users/{user.Id}/beatmapsets/{type.Description()}?limit={limit}&offset={offset}"
+            );
+    }
+    
+    public BeatmapPlaycount[] GetAllUserPlayedBeatmaps(User user)
+    {
+        int limit = 100;
+        int offset = 0;
+        List<BeatmapPlaycount> playedBeatmaps = [];
+        while (true)
+        {
+            BeatmapPlaycount[] maps = GetUserMostPlayedBeatmaps(user, limit, offset);
+            playedBeatmaps.AddRange(maps);
+            if (maps.Length == 0) break;
+            offset += limit;
+        }
+        
+        return playedBeatmaps.ToArray();
+    }
 
     // TODO: add the thing here im to lazy rn
     public User GetMe()
     {
         // /me/{mode?}
         return SendOsuApiRequest<User>(HttpMethod.Get, "/me");
+    }
+
+    public User GetUser(int userId, RulesetEnum? mode = null)
+    {
+        string queryString = "?key=id";
+        if (mode != null) queryString = $"/{((RulesetEnum)mode).OsuApiName()}{queryString}";
+        return SendOsuApiRequest<User>(HttpMethod.Get, $"/users/{userId}{queryString}");
     }
 
     private T SendOsuApiRequest<T>(HttpMethod httpMethod, string endpoint, HttpContent? httpContent=null)

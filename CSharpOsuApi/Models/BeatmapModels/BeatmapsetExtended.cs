@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using CSharpOsuApi.JsonUtils;
 using CSharpOsuApi.Models.BeatmapModels.Metadata;
@@ -12,6 +13,7 @@ public class BeatmapsetExtended : BeatmapsetGeneratorModel
     [JsonPropertyName("beatmaps")]
     public BeatmapExtended[]? Beatmaps { get; init; }
     
+    [JsonIgnore]
     public List<RulesetEnum> AllGameModes { get {
         if (Beatmaps == null) return [];
         List<RulesetEnum> gameModes = [];
@@ -60,4 +62,40 @@ public class BeatmapsetExtended : BeatmapsetGeneratorModel
     public DateTime? SubmittedDate { get; init; }
     [JsonPropertyName("tags")]
     public required string Tags { get; init; }
+    
+    public static implicit operator Beatmapset (BeatmapsetExtended b)
+    {
+        // Beatmapset r = new Beatmapset();
+        // Type mapType = r.GetType();
+        // Type eMapType = b.GetType();
+        // foreach (FieldInfo field in typeof(Beatmapset).GetFields())
+        // {
+        //     r.
+        // }
+        
+        return new Beatmapset
+        {
+            Artist = b.Artist,
+            ArtistUnicode = b.ArtistUnicode,
+            Covers = b.Covers,
+            Creator = b.Creator,
+            FavouriteCount = b.FavouriteCount,
+            Id = b.Id,
+            Nsfw = b.Nsfw,
+            Offset = b.Offset,
+            PlayCount = b.PlayCount,
+            PreviewUrl = b.PreviewUrl,
+            Source = b.Source,
+            Status = b.Status,
+            Spotlight = b.Spotlight,
+            Title = b.Title,
+            TitleUnicode = b.TitleUnicode,
+            UserId = b.UserId,
+            Video = b.Video,
+            CurrentNominations = b.CurrentNominations,
+            HasFavourited = b.HasFavourited,
+            PackTags = b.PackTags,
+            TrackId = b.TrackId
+        };
+    }
 }
